@@ -153,6 +153,8 @@ def config_command(args):
         with open(options.overwrite_seed, 'rb') as f:
             overwrite_seed = yaml.safe_load(f)
 
+    cap = prepare_capabilities(cap)
+
     conf = {}
     if options.base:
         conf['base'] = os.path.abspath(options.base)
@@ -193,3 +195,23 @@ def config_command(args):
             yaml.dump(seed_conf, f, default_flow_style=False, Dumper=MapProxyYAMLDumper)
 
     return 0
+
+
+def prepare_capabilities(cap):
+    """
+    Before the autoconfig will be created, the Capabilites-Object will be prepared
+    """
+    cap = prepare_wms_names(cap)
+    return cap
+
+
+def prepare_wms_names(cap):
+    """
+    Some WMS-Names has the ":" included.
+    This conflicts with the MapProxy-Syntax <Source-Name>:<Layer-Name>
+    So for this case the ":"-sign will be replace with "_"
+    For more information look at this issue: https://github.com/mapproxy/mapproxy/issues/576
+    """
+    for layer in cap.layers_list():
+        layer['name'] = layer['name'].replace(':', '_')
+    return cap
